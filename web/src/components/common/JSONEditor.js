@@ -179,7 +179,14 @@ const JSONEditor = ({
   // 填入模板
   const fillTemplate = useCallback(() => {
     if (template) {
-      const templateString = JSON.stringify(template, null, 2);
+      let templateData = template;
+      
+      // 如果 template 是函数，执行它获取数据
+      if (typeof template === 'function') {
+        templateData = template();
+      }
+      
+      const templateString = JSON.stringify(templateData, null, 2);
       
       // 通过formApi设置值（如果提供的话）
       if (formApi && field) {
@@ -191,7 +198,7 @@ const JSONEditor = ({
       
       // 如果是可视化模式，同时更新jsonData
       if (editMode === 'visual') {
-        setJsonData(template);
+        setJsonData(templateData);
       }
       
       // 清除错误状态
