@@ -817,6 +817,62 @@ const EditChannelModal = (props) => {
     return modelMapping;
   };
 
+  // 添加映射模型到模型列表
+  const addMappingKeysToModels = () => {
+    const mappingValue = inputs.model_mapping || '';
+    if (!mappingValue.trim()) {
+      showInfo(t('请先填写模型映射'));
+      return;
+    }
+
+    let mappingObj = {};
+    try {
+      mappingObj = JSON.parse(mappingValue);
+    } catch (error) {
+      showError(t('模型映射格式错误，请检查JSON格式'));
+      return;
+    }
+
+    if (typeof mappingObj !== 'object' || mappingObj === null) {
+      showError(t('模型映射必须是一个对象'));
+      return;
+    }
+
+    const mappingKeys = Object.keys(mappingObj);
+    if (mappingKeys.length === 0) {
+      showInfo(t('模型映射中没有找到映射项'));
+      return;
+    }
+
+    const currentModels = [...inputs.models];
+    const newModels = [];
+    let currentModelOptions = [...modelOptions];
+
+    mappingKeys.forEach((key) => {
+      if (key && !currentModels.includes(key)) {
+        currentModels.push(key);
+        currentModelOptions.push({
+          key: key,
+          label: key,
+          value: key,
+        });
+        newModels.push(key);
+      }
+    });
+
+    if (newModels.length === 0) {
+      showInfo(t('所有映射模型都已在模型列表中'));
+      return;
+    }
+
+    setModelOptions(currentModelOptions);
+    handleInputChange('models', currentModels);
+    showSuccess(t('已添加 {{count}} 个映射模型：{{list}}', {
+      count: newModels.length,
+      list: newModels.join(', ')
+    }));
+  };
+
   const batchAllowed = !isEdit || isMultiKeyChannel;
   const batchExtra = batchAllowed ? (
     <Space>
@@ -1497,9 +1553,19 @@ const EditChannelModal = (props) => {
                     editorType="keyValue"
                     formApi={formApiRef.current}
                     extraText={
-                      <Text type="tertiary" size="small">
-                        {t('键为请求中的模型名称，值为要替换的模型名称')}
-                      </Text>
+                      <div className="flex items-center justify-between">
+                        <Text type="tertiary" size="small">
+                          {t('键为请求中的模型名称，值为要替换的模型名称')}
+                        </Text>
+                        <Button
+                          size="small"
+                          type="tertiary"
+                          onClick={addMappingKeysToModels}
+                          className="!text-semi-color-primary hover:bg-blue-50 text-xs"
+                        >
+                          {t('添加映射模型')}
+                        </Button>
+                      </div>
                     }
                   />
                 </Card>
