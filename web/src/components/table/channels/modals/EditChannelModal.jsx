@@ -784,6 +784,39 @@ const EditChannelModal = (props) => {
     }
   };
 
+  // 自动生成模型映射
+  const generateModelMapping = () => {
+    if (!inputs.models || inputs.models.length === 0) {
+      showInfo(t('请先选择模型'));
+      return {};
+    }
+
+    const modelMapping = {};
+    let validMappingCount = 0;
+
+    inputs.models.forEach((model) => {
+      if (!model || typeof model !== 'string') return;
+      
+      // 以'/'分割，取最后一段作为key
+      const segments = model.split('/');
+      const key = segments[segments.length - 1];
+      
+      // 如果key和原模型名不同，则添加到映射中
+      if (key !== model) {
+        modelMapping[key] = model;
+        validMappingCount++;
+      }
+    });
+
+    if (validMappingCount === 0) {
+      showInfo(t('当前模型无需映射'));
+      return {};
+    }
+
+    showSuccess(t('已生成 {{count}} 个模型映射', { count: validMappingCount }));
+    return modelMapping;
+  };
+
   const batchAllowed = !isEdit || isMultiKeyChannel;
   const batchExtra = batchAllowed ? (
     <Space>
@@ -1459,8 +1492,8 @@ const EditChannelModal = (props) => {
                     }
                     value={inputs.model_mapping || ''}
                     onChange={(value) => handleInputChange('model_mapping', value)}
-                    template={MODEL_MAPPING_EXAMPLE}
-                    templateLabel={t('填入模板')}
+                    template={generateModelMapping}
+                    templateLabel={t('自动填入')}
                     editorType="keyValue"
                     formApi={formApiRef.current}
                     extraText={
