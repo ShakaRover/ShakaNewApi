@@ -337,7 +337,7 @@ func GetChannel(c *gin.Context) {
 		common.ApiError(c, err)
 		return
 	}
-	channel, err := model.GetChannelById(id, false)
+	channel, err := model.GetChannelById(id, true) // 修改为 true 以包含 key 字段
 	if err != nil {
 		common.ApiError(c, err)
 		return
