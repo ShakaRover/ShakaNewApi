@@ -155,7 +155,11 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 		}
 	}
 
-	request := buildTestRequest(testModel)
+	// 获取渠道设置，检查是否启用流模式测试
+	channelSettings := channel.GetSetting()
+	streamModeTest := channelSettings.StreamModeTest
+
+	request := buildTestRequest(testModel, streamModeTest)
 	// 创建一个用于日志的 info 副本，移除 ApiKey
 	logInfo := *info
 	logInfo.ApiKey = ""
@@ -171,6 +175,7 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 	}
 
 	adaptor.Init(info)
+	info.IsStream = streamModeTest
 
 	var convertedRequest any
 	// 根据 RelayMode 选择正确的转换函数
@@ -202,10 +207,12 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 			newAPIError: types.NewError(err, types.ErrorCodeJsonMarshalFailed),
 		}
 	}
+	common.SysLog(fmt.Sprintf("testing channel #%d, request body: \n%s", channel.Id, string(jsonData)))
 	requestBody := bytes.NewBuffer(jsonData)
 	c.Request.Body = io.NopCloser(requestBody)
 	resp, err := adaptor.DoRequest(c, info, requestBody)
 	if err != nil {
+		common.SysLog(fmt.Sprintf("testing channel #%d DoRequest failed: %v", channel.Id, err))
 		return testResult{
 			context:     c,
 			localErr:    err,
@@ -217,6 +224,7 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 		httpResp = resp.(*http.Response)
 		if httpResp.StatusCode != http.StatusOK {
 			err := service.RelayErrorHandler(httpResp, true)
+			common.SysLog(fmt.Sprintf("testing channel #%d HTTP status code %d: %v", channel.Id, httpResp.StatusCode, err))
 			return testResult{
 				context:     c,
 				localErr:    err,
@@ -226,6 +234,7 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 	}
 	usageA, respErr := adaptor.DoResponse(c, httpResp, info)
 	if respErr != nil {
+		common.SysLog(fmt.Sprintf("testing channel #%d DoResponse failed: %v", channel.Id, respErr))
 		return testResult{
 			context:     c,
 			localErr:    respErr,
@@ -233,6 +242,7 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 		}
 	}
 	if usageA == nil {
+		common.SysLog(fmt.Sprintf("testing channel #%d usage is nil", channel.Id))
 		return testResult{
 			context:     c,
 			localErr:    errors.New("usage is nil"),
@@ -243,6 +253,7 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 	result := w.Result()
 	respBody, err := io.ReadAll(result.Body)
 	if err != nil {
+		common.SysLog(fmt.Sprintf("testing channel #%d read response body failed: %v", channel.Id, err))
 		return testResult{
 			context:     c,
 			localErr:    err,
@@ -275,7 +286,7 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 		Quota:            quota,
 		Content:          "模型测试",
 		UseTimeSeconds:   int(consumedTime),
-		IsStream:         false,
+		IsStream:         streamModeTest,
 		Group:            info.UsingGroup,
 		Other:            other,
 	})
@@ -287,10 +298,10 @@ func testChannel(channel *model.Channel, testModel string) testResult {
 	}
 }
 
-func buildTestRequest(model string) *dto.GeneralOpenAIRequest {
+func buildTestRequest(model string, streamMode bool) *dto.GeneralOpenAIRequest {
 	testRequest := &dto.GeneralOpenAIRequest{
 		Model:  "", // this will be set later
-		Stream: false,
+		Stream: streamMode,
 	}
 
 	// 先判断是否为 Embedding 模型

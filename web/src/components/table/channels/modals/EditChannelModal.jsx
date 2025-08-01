@@ -130,6 +130,7 @@ const EditChannelModal = (props) => {
     thinking_to_content: false,
     proxy: '',
     pass_through_body_enabled: false,
+    stream_mode_test: false,
     system_prompt: '',
   };
   const [batch, setBatch] = useState(false);
@@ -160,6 +161,7 @@ const EditChannelModal = (props) => {
     thinking_to_content: false,
     proxy: '',
     pass_through_body_enabled: false,
+    stream_mode_test: false,
     system_prompt: '',
   });
   const showApiConfigCard = inputs.type !== 45;  // 控制是否显示 API 配置卡片（仅当渠道类型不是 豆包 时显示）
@@ -194,6 +196,7 @@ const EditChannelModal = (props) => {
           thinking_to_content: parsed.thinking_to_content || false,
           proxy: parsed.proxy || '',
           pass_through_body_enabled: parsed.pass_through_body_enabled || false,
+          stream_mode_test: parsed.stream_mode_test || false,
           system_prompt: parsed.system_prompt || '',
         });
       } else {
@@ -202,6 +205,7 @@ const EditChannelModal = (props) => {
           thinking_to_content: false,
           proxy: '',
           pass_through_body_enabled: false,
+          stream_mode_test: false,
           system_prompt: '',
         });
       }
@@ -212,6 +216,7 @@ const EditChannelModal = (props) => {
         thinking_to_content: false,
         proxy: '',
         pass_through_body_enabled: false,
+        stream_mode_test: false,
         system_prompt: '',
       });
     }
@@ -337,6 +342,7 @@ const EditChannelModal = (props) => {
           data.thinking_to_content = parsedSettings.thinking_to_content || false;
           data.proxy = parsedSettings.proxy || '';
           data.pass_through_body_enabled = parsedSettings.pass_through_body_enabled || false;
+          data.stream_mode_test = parsedSettings.stream_mode_test || false;
           data.system_prompt = parsedSettings.system_prompt || '';
         } catch (error) {
           console.error('解析渠道设置失败:', error);
@@ -344,12 +350,14 @@ const EditChannelModal = (props) => {
           data.thinking_to_content = false;
           data.proxy = '';
           data.pass_through_body_enabled = false;
+          data.stream_mode_test = false;
         }
       } else {
         data.force_format = false;
         data.thinking_to_content = false;
         data.proxy = '';
         data.pass_through_body_enabled = false;
+        data.stream_mode_test = false;
         data.system_prompt = '';
       }
 
@@ -369,6 +377,7 @@ const EditChannelModal = (props) => {
         thinking_to_content: data.thinking_to_content,
         proxy: data.proxy,
         pass_through_body_enabled: data.pass_through_body_enabled,
+        stream_mode_test: data.stream_mode_test,
         system_prompt: data.system_prompt,
       });
       // console.log(data);
@@ -558,6 +567,7 @@ const EditChannelModal = (props) => {
         thinking_to_content: false,
         proxy: '',
         pass_through_body_enabled: false,
+        stream_mode_test: false,
         system_prompt: '',
       });
     }
@@ -700,6 +710,7 @@ const EditChannelModal = (props) => {
       thinking_to_content: localInputs.thinking_to_content || false,
       proxy: localInputs.proxy || '',
       pass_through_body_enabled: localInputs.pass_through_body_enabled || false,
+      stream_mode_test: localInputs.stream_mode_test || false,
       system_prompt: localInputs.system_prompt || '',
     };
     localInputs.setting = JSON.stringify(channelExtraSettings);
@@ -709,6 +720,7 @@ const EditChannelModal = (props) => {
     delete localInputs.thinking_to_content;
     delete localInputs.proxy;
     delete localInputs.pass_through_body_enabled;
+    delete localInputs.stream_mode_test;
     delete localInputs.system_prompt;
 
     let res;
@@ -1717,6 +1729,15 @@ const EditChannelModal = (props) => {
                     uncheckedText={t('关')}
                     onChange={(value) => handleChannelSettingsChange('pass_through_body_enabled', value)}
                     extraText={t('启用请求体透传功能')}
+                  />
+
+                  <Form.Switch
+                    field='stream_mode_test'
+                    label={t('流模式测试')}
+                    checkedText={t('开')}
+                    uncheckedText={t('关')}
+                    onChange={(value) => handleChannelSettingsChange('stream_mode_test', value)}
+                    extraText={t('启用流模式测试功能')}
                   />
 
                   <Form.Input
